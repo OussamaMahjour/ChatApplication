@@ -19,8 +19,8 @@ A real-time chat application built with **Spring Boot**, utilizing **WebSocket**
 - **Backend**: Spring Boot, Spring WebSocket, Spring Security
 - **Messaging**: Apache Kafka
 - **Build Tool**: Maven / Gradle
-- **Database**: PostgreSQL or H2 (dev)
-- **Frontend (optional)**: React / Vue / Angular (for WebSocket UI)
+- **Database**: Mongodb
+- **Frontend **: React 
 
 ---
 
@@ -30,7 +30,7 @@ A real-time chat application built with **Spring Boot**, utilizing **WebSocket**
 
 - Java 17+
 - Maven or Gradle
-- Apache Kafka and Zookeeper running locally or in Docker
+- Apache Kafka 
 
 ### Clone the Repository
 
