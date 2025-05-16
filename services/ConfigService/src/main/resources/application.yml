@@ -8,6 +8,7 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/OussamaMahjour/ChatApplication/tree/Omar
+          uri: https://github.com/OussamaMahjour/ChatApplication.git
+          default-label: Omar
           clone-on-start: true
           search-paths: services/configuration

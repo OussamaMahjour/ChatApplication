@@ -23,7 +23,7 @@ public class UserController {
     public List<ResponseDto> allUsers(){
         return userService.getAllUsers();
     }
-
+    /*
     @PostMapping("/login")
     public String login(@Valid @RequestBody LoginRequest loginRequest){
         if (userService.login(loginRequest)){
@@ -36,6 +36,7 @@ public class UserController {
     public User register(@Valid @RequestBody User registerRequest){
         return userService.registerUser(registerRequest);
     }
+    */
     @GetMapping("/user/{id}")
     public  String userProfile(@PathVariable("id") int id){
         return "userProfile "+"id: "+id;

@@ -14,7 +14,6 @@ public class MapperImplementation implements UserMapper{
                 .deletedAt(user.getDeletedAt())
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
-                .password(user.getPassword())
                 .username(user.getUsername()).build();
     }
     @Override
@@ -26,7 +25,6 @@ public class MapperImplementation implements UserMapper{
                 .lastName(responseDto.getLastName())
                 .deletedAt(responseDto.getDeletedAt())
                 .username(responseDto.getUsername())
-                .password(responseDto.getPassword())
                 .build();
     }
 }

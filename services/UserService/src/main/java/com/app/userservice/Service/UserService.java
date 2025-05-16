@@ -1,8 +1,6 @@
 package com.app.userservice.Service;
 
 
-import com.app.userservice.Config.PasswordUtil;
-import com.app.userservice.DTO.LoginRequest;
 import com.app.userservice.DTO.ResponseDto;
 import com.app.userservice.Entity.User;
 import com.app.userservice.Mapper.UserMapper;
@@ -36,7 +34,7 @@ public class UserService {
         User user = userRepository.findById(id).orElse(null);
         return Optional.ofNullable(userMapper.userToResponseDto(user));
     }
-
+    /*
     public User registerUser(User user) {
         String hashed = PasswordUtil.hash(user.getPassword());
         user.setPassword(hashed);
@@ -51,6 +49,6 @@ public class UserService {
             return false;
         }
         return PasswordUtil.verify(loginRequest.getPassword(), user.get().getPassword());
-    }
+    }*/
 
 }

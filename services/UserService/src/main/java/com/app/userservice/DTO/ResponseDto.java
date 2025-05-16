@@ -1,9 +1,6 @@
 package com.app.userservice.DTO;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
@@ -11,10 +8,11 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Setter
+@Getter
 public class ResponseDto {
     private Long id;
     private String username;
-    private String password;
     private String email;
     private String firstName;
     private String lastName;
