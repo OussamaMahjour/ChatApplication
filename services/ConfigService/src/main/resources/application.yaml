@@ -8,6 +8,6 @@ spring:
     config:
       server:
         git:
-          uri: https://github.com/your-repo/config-repo
+          uri: https://github.com/OussamaMahjour/ChatApplication/tree/Omar
           clone-on-start: true
-          search-paths: '{application}'
+          search-paths: services/configuration
