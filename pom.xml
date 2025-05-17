@@ -10,7 +10,7 @@
 
     <modules>
         <module>services/chat-service</module>
-        <module>services/UserService</module>
+        <module>services/user-service</module>
     </modules>
 
     <!-- (Optional) dependencyManagement, pluginManagement, etc. -->

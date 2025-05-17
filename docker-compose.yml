@@ -60,3 +60,37 @@ services:
       DYNAMIC_CONFIG_ENABLED: 'true'
       KAFKA_CLUSTERS_0_NAME: wizard_test
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+
+  user-service:
+      container_name: user-service
+      build:
+        context: services/user-service
+        dockerfile: ../../docker/java/Dockerfile
+      ports:
+        - "8083:8080"
+      healthcheck:
+        test: [ "CMD","curl","-f", "http://localhost:8080/health" ]
+        interval: 15s
+        retries: 6
+      environment:
+        - DISCOVERY_SERVICE_URL=http://discovery-service:8080/eureka
+        - CONFIG_SERVICE_URL=http://config-service:8080
+      depends_on:
+#        config-service:
+#          condition: service_healthy
+        user-db:
+          condition: service_started
+
+  user-db:
+        container_name: user-db
+        image: mysql:8.0
+        volumes:
+          - ./storage/user-db:/var/lib/mysql
+        restart: always
+        environment:
+          MYSQL_PASSWORD: root
+          MYSQL_USER: mysql
+          MYSQL_DATABASE: user_service_db
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        ports:
+          - "3307:3306"
