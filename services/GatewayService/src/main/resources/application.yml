@@ -11,14 +11,16 @@ spring:
           enabled: true
           lower-case-service-id: true
       routes:
-        - id: user-service
-          uri: lb://USER-SERVICE
+        - id: USERSERVICE
+          uri: lb://USERSERVICE
           predicates:
             - Path=/users/**
-          filters:
-            - StripPrefix=1
 
 eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
+    healthcheck:
+      enabled: true
+  instance:
+    prefer-ip-address: true
