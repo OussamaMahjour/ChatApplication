@@ -12,7 +12,6 @@ type Props =  {
 
 
 function Account({isActive,contact,lastMessage,lastMessageTime,nbrOfUnSeenMessages,setCurrentContact}:Props):ReactElement{
-
     return <div className={`w-full h-20 p-4    rounded hover:bg-accent-light hover:dark:bg-accent-dark cursor-pointer flex items-center gap-2 ${isActive?"dark:bg-accent-dark bg-accent-light":""}`}
             onClick={()=>setCurrentContact(contact)}
     >

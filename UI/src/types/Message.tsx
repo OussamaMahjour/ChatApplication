@@ -1,8 +1,11 @@
 type Message = {
+    id?:string
     body:string;
-    isMine:boolean;
-    isSeen:boolean;
-    sentDate:Date;
+    owner:string;
+    seen:boolean;
+    MessageType:string;
+    sentAt:Date;
+  
 }
 
 export default Message;

@@ -3,49 +3,45 @@ import Account from "./component/Account";
 import Conversation from "../../types/Conversation";
 import Contact from "../../types/Contact";
 import Discussion from "./component/Discussion";
-import User from "../../types/User";
-import { useNavigate } from "react-router-dom";
 import { Client, IMessage } from "@stomp/stompjs";
 import Message from "../../types/Message";
 import notificationSound from '../../assets/notification.mp3';
+import { useAuth } from "../../provider/AuthProvider";
+import Input from "../../components/Input";
+import ThemeButton from "../../components/ThemeButton";
+import Button from "../../components/Button";
+import ButtonInverse from "../../components/ButtonInverse";
 
 
-type Props= {
-    theme:string;
-    setTheme:CallableFunction;
-    user?:User;
-}
 
 
 
-function Chat({theme,setTheme,user}:Props):ReactElement{
-    const navigate = useNavigate();
+
+function Chat():ReactElement | null{
     const stompClientRef = useRef<Client | null>(null);
     const [connected,setConnected] = useState(false)
     const [conversations,setConversations] = useState<Conversation[]>([])
     const [currentContact,setCurrentContact] = useState<Contact>()
     const [popup,setPopup] = useState<ReactElement|null>(null)
     const destinationRef = useRef<HTMLInputElement>(null);
-    const [unseenConvo,setUnseenConvo] = useState(0)
+    const [,setUnseenConvo] = useState(0)
     const messageRef = useRef<HTMLInputElement>(null)
+    const {user,token,logout} = useAuth()
 
+    if(!user) return null;
 
     useEffect(()=>{
-        if(user==undefined || user.username.length == 0){
-            navigate("/login")
-        }else{
+
             const client = new Client({
-                  brokerURL: 'ws://localhost:8080/chatapp',
+                  brokerURL: `ws://localhost:8080/api/v1/chat?token=${token}`,
                   onConnect: ()=>{
                     client.subscribe(`/queue/${user.username}/chat`, (msg: IMessage) => {
                             try {
-                                const raw:{destination:string,message:Message}= JSON.parse(msg.body);
-                                raw.message.sentDate = new Date(raw.message.sentDate)
-                                raw.message.isMine = false
-                                raw.message.isSeen = false
-                                registerMessage(raw.destination,raw.message)
-                                console.log('Received from:', raw.destination);
+                                const raw:Message= JSON.parse(msg.body);
+                                registerMessage(raw.owner,raw)
+                                console.log('Received from:', raw.owner);
                                 console.log(raw)
+                                raw.sentAt = new Date(raw.sentAt)
                                 
                                 setUnseenConvo(prev => {
                                     const newCount = prev + 1;
@@ -62,6 +58,7 @@ function Chat({theme,setTheme,user}:Props):ReactElement{
                             });
                             setConnected(true);
                             console.log("Connected as "+user.username)
+                            getChat()
                         },
                   onDisconnect: () => {
                     console.log("Disconnect as "+user.username)
@@ -75,13 +72,26 @@ function Chat({theme,setTheme,user}:Props):ReactElement{
                 client.activate()
                 return () => {
                 client.deactivate();
-                };
-                
-            }
-        
+                };        
     },[])
 
-    
+    const getChat = async () =>{
+        const response = await fetch(`http://localhost:8080/api/v1/chat/${user.username}`,{
+            headers:{
+                 Authorization:`Bearer ${token}`,
+            }
+        })
+
+        const data= await response.json()
+        const chats:{username:string,messages:Message[]}[] = data;
+        chats.forEach(e=>{
+            e.messages.forEach(m=>{
+                m.sentAt = new Date(m.sentAt)
+                registerMessage(e.username,m)
+            })
+        })
+       
+    }
     const updateTitle = (count: number) => {
         
         document.title = `${count > 0 ? `(${count})` : ''} ChatApp`;
@@ -89,44 +99,52 @@ function Chat({theme,setTheme,user}:Props):ReactElement{
     
 
 
-    const registerMessage = (sender:string,message:Message)=>{
+    const registerMessage = (destination:string,message:Message)=>{
         setConversations(prev => {
-            const found = prev.find(conv => conv.owner.name === sender);
+            const found = prev.find(conv => conv.contact.name === destination);
             if (found) {
                 return prev.map(conv =>
-                    conv.owner.name === sender
+                    conv.contact.name === destination
                         ? { ...conv, messages: [...conv.messages, message] }
                         : conv
                 );
             } else {
                 const contact: Contact = {
-                    name: sender,
+                    name: destination,
                     isOnline: false,
                     lastOnline: new Date(),
                     profile: "https://preview.redd.it/3fc3wd5xwf171.png?width=640&crop=smart&auto=webp&s=5becec3ee5ab15c5654fab0ad847cfae54f208a0"
                 };
-                return [...prev, { owner: contact, messages: [message] }];
+                return [...prev, { contact: contact, messages: [message] }];
             }
         });           
     }
-    const toggleTheme = ()=>{
-        if(theme=="light"){
-            setTheme("dark")
-        }else{
-            setTheme("light")
-        }
-    }
+  
 
+    const updateMessage = async(message:Message) => {
+        await fetch("http://localhost:8080/api/v1/chat/message",{
+            headers:{
+                 Authorization:`Bearer ${token}`,
+                 "Content-Type": "application/json",
+            },
+            method: "PUT",
+            
+            body:JSON.stringify({id:message.id,body:message.body,seen:message.seen})
+        })
+    }
     const setActiveContact = (contact: Contact) => {
         setConversations(prev => {
             return prev.map(conv =>
-                conv.owner.name === contact.name
+                conv.contact.name === contact.name
                     ? {
                         ...conv,
-                        messages: conv.messages.map(message => ({
-                            ...message,
-                            isSeen: true
-                        }))
+                        messages: conv.messages.map(message => {
+                            if(message.owner == contact.name){
+                                message.seen = true
+                                updateMessage(message)
+                            }
+                            return message;
+                        })
                     }
                     : conv
             );
@@ -140,21 +158,25 @@ function Chat({theme,setTheme,user}:Props):ReactElement{
         setCurrentContact(contact);
     };
 
-    const sendMessage = (dest:string,message:Message)=>{
-        
+
+    const sendMessage = (destination:string,message:Message)=>{
         if (connected && stompClientRef.current!=null ) {
-            
-            stompClientRef.current.publish({
-            destination: `/app/${dest}/chat`,
            
-            body: JSON.stringify({destination:user?.username,message:message}),
+            stompClientRef.current.publish({
+            destination: `/app/${destination}/chat`,
+            
+            body: JSON.stringify({...message,sentAt: message.sentAt.toISOString()}),
             });
-            registerMessage(dest,message)                                          
+            registerMessage(destination,message)  
+            messageRef.current!.value=""                                  
         }
        
                       
     
     }
+
+  
+    
 
     return <div className="h-full w-full  rounded shadow-md dark:shadow-secondary-dark  dark:border-border-dark  border-border-light flex bg-background-light dark:bg-background-dark ">
         {
@@ -165,56 +187,64 @@ function Chat({theme,setTheme,user}:Props):ReactElement{
             </div>
             
         }
-        {/*contacts container*/}
-        <div className="h-full max-w-100 w-1/3 border-r dark:border-border-dark border-border-light flex-col flex">
-            <div className="h-20 border-b  dark:border-border-dark border-border-light  w-full flex px-4 py-3 ">
+        <div className="h-full w-15 border-r dark:border-border-dark border-border-light flex flex-col justify-between items-between">
+           <h1></h1> 
+            <button className="w-full h-20 text-2xl cursor-pointer  " onClick={logout} >
+                <i className="fa-solid bottom-0 fa-right-from-bracket rotate-180 text-text-light dark:text-text-dark"></i>
+            </button>
+        </div>
+        {/*contacts list*/}
+          
+        <div className="h-full max-w-100 w-1/3 border-r dark:border-border-dark border-border-light flex-col flex ">
+            <div className="h-20 border-b   dark:border-border-dark border-border-light  w-full flex px-4 py-3 ">
+                
                 <h1 className="h-full w-5/7 text-center flex items-center font-bold text-xl dark:text-text-dark text-text-light">
                     Chats
                 </h1>
-                <button onClick={toggleTheme} className="h-full w-1/7 text-center text-text-light dark:text-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded hover:dark:bg-accent-dark hover:bg-accent-light">
-                    <i className={`fa-regular ${theme=="light"?"fa-sun":"fa-moon"}`}></i>
-                </button>
-                <button className="h-full w-1/7 text-center  text-text-light dark:text-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded hover:dark:bg-accent-dark hover:bg-accent-light" 
+                <ThemeButton className="w-1/7 text-xl " />
+                <Button className="h-full w-1/7 text-center  text-text-light dark:text-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded hover:dark:bg-accent-dark hover:bg-accent-light" 
                     onClick={()=>setPopup(
                         <div id="popup" className="min-w-1/4 w-100 rounded  shadow-md dark:shadow-secondary-dark  border  border-accent-light flex bg-background-light dark:bg-background-dark flex-col items-center justify-around gap-4 " > 
                                 
                             <div className=" w-full flex p-2  justify-end cursor-pointer ">
-                                <i onClick={()=>setPopup(null)} className="fa-solid fa-xmark"></i>
+                                <Button onClick={()=>setPopup(null)} >
+                                     <i  className="fa-solid fa-xmark "></i>
+                                </Button>
+                               
                             </div>
                             <div className="h-20 w-full flex p-3 py-4 gap-1  ">
-                                <input ref={destinationRef} id="destination"placeholder="Username" className="p-3 focus:outline-hidden dark:border-border-dark dark:focus:border-border-light focus:border-border-dark flex-1 h-full border border-border-light rounded  text-text-light dark:text-text-dark"/>
+                                <Input ref={destinationRef} id="destination" placeholder="Username" />
                             </div>
                             <div className="h-20 w-full flex p-3 py-4 gap-1 border-t dark:border-border-dark border-border-light ">
-                                <button className="h-full aspect-square  text-center  text-text-light dark:text-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded hover:dark:bg-accent-dark hover:bg-accent-light" >
+                                <Button className="h-full aspect-square   font-bold text-xl ">
                                     <i className="fa-solid fa-paperclip"></i>
-                                </button>
-                                <input id="message" ref={messageRef} placeholder="Write something..."  className="p-3 focus:outline-hidden dark:border-border-dark dark:focus:border-border-light focus:border-border-dark flex-1 h-full border border-border-light rounded  text-text-light dark:text-text-dark"/>
-                                <button className="h-full aspect-square bg-text-light text-background-light text-center   dark:text-background-dark dark:bg-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded " 
-                                    onClick={(e)=>{
+                                </Button>
+                                <Input id="message" ref={messageRef} placeholder="Write something..." className="p-3 focus:outline-hidden dark:border-border-dark dark:focus:border-border-light focus:border-border-dark flex-1 h-full border border-border-light rounded  text-text-light dark:text-text-dark"/>
+                                <ButtonInverse className="h-full aspect-square  text-xl  " 
+                                    onClick={()=>{
                                         const destination = destinationRef.current?.value || "";
                                         const message = messageRef.current?.value || "";
                                         if (destination.length !== 0 && message.length !== 0) {
                                             console.log("Call before message send ")
                                             console.log(message,destination)
-                                          sendMessage(destination, {
+                                          sendMessage(destination,{
                                             body: message,
-                                            isMine: true,
-                                            isSeen: true,
-                                            sentDate: new Date(),
+                                            owner:user.username,
+                                            seen: false,
+                                            MessageType:"TEXT",
+                                            sentAt: new Date(),
                                           });
                                         }
-                                        setPopup(null)
-                                       
-                                    }}
-                                >
+                                        setPopup(null)                                      
+                                    }}>
                                     <i className="fa-solid fa-paper-plane "></i>
-                                </button>
+                                </ButtonInverse>
                             </div>
                         </div>
                     )}
                 >
                     <i className="fa-solid fa-plus"></i>
-                </button>
+                </Button>
 
             </div>
             {/*Accounts list*/}
@@ -224,12 +254,12 @@ function Chat({theme,setTheme,user}:Props):ReactElement{
                         <Account 
 
                             key={index} 
-                            contact={e.owner}
-                            lastMessage={e.messages[(e.messages.length>0?e.messages.length-1:0)]?.body} 
-                            lastMessageTime={e.messages[(e.messages.length>0?e.messages.length-1:0)]?.sentDate} 
-                            nbrOfUnSeenMessages={e.messages.filter(e=>!e.isSeen).length}
+                            contact={e.contact}
+                            lastMessage={e.messages[(e.messages.length>0?e.messages.length-1:0)].body} 
+                            lastMessageTime={e.messages[(e.messages.length>0?e.messages.length-1:0)].sentAt} 
+                            nbrOfUnSeenMessages={e.messages.filter(e=>!e.seen&&e.owner!=user.username).length}
                             setCurrentContact={setActiveContact}
-                            isActive={currentContact==e.owner?true:false}
+                            isActive={currentContact==e.contact?true:false}
                             />
                     ))
                 }
@@ -259,35 +289,32 @@ function Chat({theme,setTheme,user}:Props):ReactElement{
                 </button>
             </div>
             {/* conversation body */}
-            <Discussion key={0} conversation={
-                conversations.filter((e=>e.owner.name==currentContact?.name))[0]
+            <Discussion user={user}  conversation={
+                conversations.filter((e=>e.contact.name==currentContact?.name))[0]
                 }/>
 
             <div className="h-20 w-full flex p-3 py-4 gap-1 border-t dark:border-border-dark border-border-light ">
-                <button className="h-full aspect-square  text-center  text-text-light dark:text-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded hover:dark:bg-accent-dark hover:bg-accent-light" 
-                    
-
-                    
-                >
+                <Button className="h-full aspect-square   font-bold text-xl ">
                     <i className="fa-solid fa-paperclip"></i>
-                </button>
-                <input ref={messageRef} placeholder="Write something..." className="p-3 focus:outline-hidden dark:border-border-dark dark:focus:border-border-light focus:border-border-dark flex-1 h-full border border-border-light rounded  text-text-light dark:text-text-dark"/>
-                <button className="h-full aspect-square bg-text-light text-background-light text-center   dark:text-background-dark dark:bg-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded " 
+                </Button>
+                <Input id="message" ref={messageRef} placeholder="Write something..." className="p-3 focus:outline-hidden dark:border-border-dark dark:focus:border-border-light focus:border-border-dark flex-1 h-full border border-border-light rounded  text-text-light dark:text-text-dark"/>
+                <ButtonInverse className="h-full aspect-square  text-xl  " 
                     onClick={()=>{
                             const message = messageRef.current?.value || "";
                             if (currentContact.name.length !== 0 && message.length !== 0) {
-                                sendMessage(currentContact.name, {
+                                sendMessage(currentContact.name,{
                                     body: message,
-                                    isMine: true,
-                                    isSeen: true,
-                                    sentDate: new Date(),
+                                    owner: user.username,
+                                    seen: false,
+                                    MessageType:"TEXT",
+                                    sentAt: new Date(),
                                 });
                             }
                            
                         }}
                 >
                     <i className="fa-solid fa-paper-plane "></i>
-                </button>
+                </ButtonInverse>
             </div>
             </>:
             <div className="flex h-full w-full bg-accent-light dark:bg-accent-dark justify-center items-center ">

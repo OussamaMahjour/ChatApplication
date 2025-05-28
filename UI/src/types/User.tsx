@@ -13,9 +13,10 @@ type User={
     scheduledToBeDeletedAt?:Date;
 }
 
-enum Gender{
-    MALE,
-    FEMALE
+export enum Gender{
+    MALE = 'MALE',
+    FEMALE = 'FEMALE'
 }
+
 
 export default User
