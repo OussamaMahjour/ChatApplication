@@ -25,21 +25,25 @@ function Login():ReactElement{
     const navigate = useNavigate();
    
     const handleLogin = async () => {
-        try{
-            await login(username,password)
-            navigate("/chat")
-        }catch(e: unknown){
-            if(e instanceof Exception){
-                if(e.type == ExceptionType.BAD_CREDENTIAL){
-                    setError("Invalid Username & Password")
-                   
-                }else{
-                    setAlert({message:"Unable to Login! Try Again Later.",timeout:2000})
+        if ((username.length!=0) || (password.length!=0)) {
+            try{
+                await login(username,password)
+                navigate("/chat")
+            }catch(e: unknown){
+                if(e instanceof Exception){
+                    if(e.type == ExceptionType.BAD_CREDENTIAL){
+                        if (!username || !password) {
+                    
+                    }else{
+                        setAlert({message:"Unable to Login! Try Again Later.",timeout:2000})
+                    }
+                    
+                }else {
+                    console.error("Unknown error during login:", e);
                 }
-                
-            }else {
-                console.error("Unknown error during login:", e);
-            }
+            }}
+        }else{
+                setAlert({message:"Both Usename and Password should be set",timeout:2000})
         }
         
         
@@ -57,7 +61,7 @@ function Login():ReactElement{
             <div className={`gap-4 flex flex-col w-full items-center flex-1 ${error?"invalid":""}`}>
                 <FormInput id="username" placeholder="Username" errorMessage={error} className="w-full"  onChange={(e)=>{setUsername(e.target.value)}} ></FormInput>
                  
-                 <FormInput id="password" placeholder="Password"  type="password" className="w-full"  onChange={(e) => setPassword(e.target.value)} ></FormInput>
+                 <FormInput id="password" placeholder="Password"   errorMessage={error} type="password" className="w-full"  onChange={(e) => setPassword(e.target.value)} ></FormInput>
                     <ButtonInverse onClick={handleLogin} className="p-3 w-1/3 max-w-40      " >
                         Connect
                     </ButtonInverse>
