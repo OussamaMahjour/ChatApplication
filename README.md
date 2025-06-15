@@ -1,26 +1,25 @@
 # 💬 Real-Time Chat Application
 
-A real-time chat application built with **Spring Boot**, utilizing **WebSocket** for real-time messaging and **Apache Kafka** for message streaming and scalability.
+A real-time microservice chat application built with **Spring Boot**, utilizing **WebSocket** with the STOMP framework for real-time messaging.
 
 ---
 
 ## 📌 Features
 
 - ✅ Real-time chat using WebSocket
-- ✅ Kafka for message broadcasting and persistence
-- ✅ Multi-room chat support
-- ✅ Basic user authentication
-- ✅ REST API for user and room management
+- ✅ Contact and Conversation management
+- ✅ User and WebSockets authentication using  jwt tokens
+- ✅ REST API for users and  messages management
 
 ---
 
 ## 🚀 Tech Stack
 
-- **Backend**: Spring Boot, Spring WebSocket, Spring Security
-- **Messaging**: Apache Kafka
+- **Backend**: Spring Boot, Spring WebSocket, Spring Security,Spring Gateway,Spring Discovery
+- **Messaging**: STOMP framework
 - **Build Tool**: Maven / Gradle
-- **Database**: Mongodb
-- **Frontend **: React 
+- **Database**: Mongodb,Mysql
+- **Frontend **: React ,Typecript
 
 ---
 
@@ -30,8 +29,7 @@ A real-time chat application built with **Spring Boot**, utilizing **WebSocket**
 
 - Java 17+
 - Maven or Gradle
-- Apache Kafka 
-
+- Docker
 ### Clone the Repository
 
 ```bash
@@ -39,59 +37,31 @@ git clone https://github.com/your-username/chat-application.git
 cd chat-application
 ````
 
-### Start Kafka (Docker Example)
+### Build and run  Services
 
 ```bash
-docker-compose up -d
+docker-compose up --build  -d
 ```
 
-### Run the Application
 
-```bash
-./mvnw spring-boot:run
-```
 
-### Test WebSocket
+### See User Interface 
 
-* Connect to `ws://localhost:8080/ws/chat`
-* Send a JSON message:
-
-  ```json
-  {
-    "sender": "oussama",
-    "room": "general",
-    "message": "Hello!"
-  }
-  ```
+* Go to `http//localhost:8080`
 
 ---
 
 ## 📈 Roadmap
 
-### ✅ Phase 1: MVP
-
-* [ ] WebSocket setup
-* [ ] Kafka producer & consumer integration
-* [ ] Basic user login and chatroom support
-* [ ] REST endpoints for chatroom/user creation
-
-### 🚧 Phase 2: Improvements
-
-* [ ] Store chat messages in database
-* [ ] Support private (1-to-1) chats
-* [ ] Typing indicators
-* [ ] Message read receipts
-
-### 🧠 Phase 3: Advanced Features
-
-* [ ] WebSocket authentication via JWT
-* [ ] Kafka message partitioning by chat room
-* [ ] Delivery guarantees (Kafka acknowledgments)
-* [ ] Admin panel for moderation
-
-### 🎨 Phase 4: Frontend UI 
-
-* [ ] Real-time chat UI (React/Vue)
+* [X] WebSocket setup
+* [X] User creation and management
+* [X] User login and Authentication using JWT
+* [X] REST endpoints for chats/user creation
+* [X] Store chat messages in the database
+* [X] Support private (1-to-1) chats
+* [X] Message read receipts
+* [X] WebSocket authentication via JWT
+* [X] Real-time chat UI (React/Vue)
 * [ ] User presence indicators
 * [ ] Mobile responsiveness
 
@@ -102,20 +72,17 @@ docker-compose up -d
 ```
 chatApplication/
 ├── docker/            
-├── services/
+├── services/ (backend services)
     ├── gateway
     ├── discovery
     ├── auth-service    
     ├── chat-service 
-├── UI/               
+├── UI/     (user interface)          
 
 ```
 
 ---
 
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to fork the project and open a PR.
 
 
 
