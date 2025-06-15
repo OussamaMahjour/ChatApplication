@@ -19,7 +19,7 @@ A real-time microservice chat application built with **Spring Boot**, utilizing 
 - **Messaging**: STOMP framework
 - **Build Tool**: Maven / Gradle
 - **Database**: Mongodb,Mysql
-- **Frontend **: React ,Typecript
+- **Frontend**: React ,Typecript
 
 ---
 
