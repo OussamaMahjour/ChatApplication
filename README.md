@@ -61,7 +61,7 @@ docker-compose up --build  -d
 * [X] Support private (1-to-1) chats
 * [X] Message read receipts
 * [X] WebSocket authentication via JWT
-* [X] Real-time chat UI (React/Vue)
+* [X] Real-time chat UI (React/Typescript)
 * [ ] User presence indicators
 * [ ] Mobile responsiveness
 
