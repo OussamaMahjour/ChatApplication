@@ -1,0 +1,210 @@
+services:
+
+  gateway:
+    container_name: gateway
+    
+    build:
+      context: services/gateway
+      dockerfile: ../../docker/java/Dockerfile
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+    healthcheck:
+      test: [ "CMD","curl","-f", "http://localhost:8080/health" ]
+      interval: 15s
+      retries: 6
+    depends_on:
+      - discovery
+    
+      
+
+
+  discovery:
+    container_name: discovery
+    build:
+      context: services/discovery
+
+      dockerfile: ../../docker/java/Dockerfile
+    ports:
+      - "8761:8761"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+    healthcheck:
+      test: [ "CMD","curl","-f", "http://localhost:8761/health" ]
+      interval: 15s
+      retries: 6
+
+  # config-service:
+  #   container_name: config-service
+  #   build:
+  #     context: services/ConfigService
+  #     dockerfile: ../../docker/java/Dockerfile
+  #   ports:
+  #     - "8090:8090"
+  #   healthcheck:
+  #     test: [ "CMD","curl","-f", "http://localhost:8090/health" ]
+  #     interval: 15s
+  #     retries: 6
+
+  chat-service:
+    container_name: chat-service
+    build:
+      context: services/chat-service
+      dockerfile: ../../docker/java/Dockerfile
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+    ports:
+      - "8085:8080"
+    depends_on:
+      - gateway
+      - chat-db
+      
+
+  chat-db:
+    image: mongo:7.0.5
+    container_name: chat-db
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+    volumes:
+      - ./storage/chat/db:/data/db
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+      MONGO_INITDB_DATABASE: chat
+    ports:
+      - "27020:27017"
+
+
+  user-service:
+      container_name: user-service    
+      build:
+        context: services/user-service
+        dockerfile: ../../docker/java/Dockerfile
+      ports:
+        - "8083:8080"
+      deploy:
+        resources:
+          limits:
+            cpus: '0.5'
+            memory: 1G
+          reservations:
+            cpus: '0.2'
+            memory: 512M
+      healthcheck:
+        test: [ "CMD","curl","-f", "http://localhost:8080/health" ]
+        interval: 15s
+        retries: 6
+      environment:
+        - DISCOVERY_SERVICE_URL=http://discovery-service:8080/eureka
+        - CONFIG_SERVICE_URL=http://config-service:8080
+      depends_on:
+        - gateway
+        - user-db
+          
+
+  auth-service:
+    container_name: auth-service
+    build:
+      context: services/auth-service
+      dockerfile: ../../docker/java/Dockerfile
+    ports:
+      - "8082:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+    healthcheck:
+      test: [ "CMD","curl","-f", "http://localhost:8080/health" ]
+      interval: 15s
+      retries: 6
+    depends_on:
+      - auth-db
+      - user-service
+
+  auth-db:
+    container_name: auth-db
+    image: mysql:8.0
+    volumes:
+      - ./storage/auth-db:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_PASSWORD: root
+      MYSQL_USER: mysql
+      MYSQL_DATABASE: auth_db
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    ports:
+      - "3308:3306"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.2'
+          memory: 512M
+
+  user-db:
+        container_name: user-db
+        image: mysql:8.0
+        volumes:
+          - ./storage/user-db:/var/lib/mysql
+        restart: always
+        environment:
+          MYSQL_PASSWORD: root
+          MYSQL_USER: mysql
+          MYSQL_DATABASE: user_service_db
+          MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+        ports:
+          - "3307:3306"
+        deploy:
+          resources:
+            limits:
+              cpus: '0.5'
+              memory: 1G
+            reservations:
+              cpus: '0.2'
+              memory: 512M
+
+  # frontend:
+  #   build:
+  #     context: UI
+  #     target: development
+  #     dockerfile: ../docker/react/Dockerfile
+  #   ports:
+  #     - 3000:3000
+  #   volumes:
+  #     - ./UI/src:/code/src
+  #     - /UI/node_modules
+  #   expose:
+  #     - 3306
+  #     - 33060
