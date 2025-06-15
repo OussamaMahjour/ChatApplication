@@ -47,7 +47,7 @@ docker-compose up --build  -d
 
 ### See User Interface 
 
-* Go to `http//localhost:8080`
+* Go to `http//localhost:3000`
 
 ---
 
