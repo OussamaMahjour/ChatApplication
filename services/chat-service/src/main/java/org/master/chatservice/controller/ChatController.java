@@ -22,12 +22,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 public class ChatController {
     private ChatService chatService;
-    private SimpMessagingTemplate messagingTemplate;
 
     @MessageMapping("/{username}/chat")
     public void test(@DestinationVariable String username, Message message){
        chatService.save(username, message);
-       messagingTemplate.convertAndSend("/queue/"+username+"/chat",message);
     }
 
 

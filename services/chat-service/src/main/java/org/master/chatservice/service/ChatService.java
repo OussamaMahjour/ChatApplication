@@ -12,6 +12,8 @@ import org.master.chatservice.entity.ChatType;
 import org.master.chatservice.entity.Message;
 import org.master.chatservice.repository.ChatRepository;
 import org.master.chatservice.repository.MessageRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,6 +28,7 @@ public class ChatService {
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
     private Mapper mapper;
+    private SimpMessagingTemplate messagingTemplate;
 
     public void save(String username, Message message) {
         List<String> participants =new ArrayList<>();
@@ -73,6 +76,11 @@ public class ChatService {
                             .seen(messageUpdate.getSeen())
                             .type(message.getType())
                             .build()));
+
+    }
+    @Async
+    public void sendMessage(String destination,Message message){
+        messagingTemplate.convertAndSend("/queue/"+destination+"/chat",message);
 
     }
 }
