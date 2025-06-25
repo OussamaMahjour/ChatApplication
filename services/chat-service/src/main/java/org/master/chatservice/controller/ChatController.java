@@ -11,6 +11,7 @@ import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.messaging.simp.annotation.SubscribeMapping;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,10 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 public class ChatController {
     private ChatService chatService;
-
+    private SimpMessagingTemplate messagingTemplate;
     @MessageMapping("/{username}/chat")
     public void test(@DestinationVariable String username, Message message){
        chatService.save(username, message);
+       messagingTemplate.convertAndSend("/queue/"+username+"/chat",message);
+
+
     }
 
 

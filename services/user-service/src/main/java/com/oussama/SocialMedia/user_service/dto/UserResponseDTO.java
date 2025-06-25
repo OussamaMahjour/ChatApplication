@@ -20,8 +20,9 @@ public class UserResponseDTO
         private String about;
         private Long phone;
         private String email;
-        private URL profilePicture;
+        private String profilePicture;
         private Gender gender;
         private LocalDate birthday;
+        private Boolean deleted;
 
 }

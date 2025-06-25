@@ -1,6 +1,8 @@
 import { ReactElement, useEffect, useRef } from "react";
 import Conversation from "../../../types/Conversation";
 import User from "../../../types/User";
+import { MessageType } from "../../../types/Message";
+import ReactPlayer from "react-player";
 
 type Props = {
     conversation:Conversation | null
@@ -34,9 +36,27 @@ function Discussion({conversation,user}:Props):ReactElement{
                         hour12: true,
                         })}
                     </p> 
-                    <h1 tabIndex={-1} ref={index === conversation.messages.length - 1 ? lastMessageRef : null} className="p-3  rounded-lg  text-accent-light dark:text-accent-dark bg-text-light dark:bg-text-dark">
-                        {e.body}
-                    </h1>
+                    <div className="max-w-1/2  overflow-hidden rounded bg-text-light dark:bg-text-dark p-1">
+                    {
+                        e.type==MessageType.TEXT?
+                        <p tabIndex={-1} ref={index === conversation.messages.length - 1 ? lastMessageRef : null} className="p-1 w-full max-w-full  rounded-lg  text-accent-light dark:text-accent-dark bg-text-light dark:bg-text-dark">
+                            {e.body}
+                        </p>:
+                        e.type==MessageType.IMAGE?
+                        <img className="max-h-70" src={`http://localhost:8080/api/v1/media/${e.body}`}></img>
+                        :e.type == MessageType.VIDEO?
+                        <ReactPlayer
+                            width="100%"
+                            className="w-full"
+                            url={`http://localhost:8080/api/v1/media/${e.body}`}
+                            controls
+                            playing={false}
+                            />
+                        :e.type == MessageType.AUDIO?
+                        <audio controls src={`http://localhost:8080/api/v1/media/${e.body}`}></audio>
+                        :<></>
+                    }
+                    </div>
                 </div>:
                 <div className="transition-normal duration-0 hover:[&_p]:visible w-full flex justify-start items-center gap-4 d-none">
                     <h1 tabIndex={-1} ref={index === conversation.messages.length - 1 ? lastMessageRef : null} className="p-3 rounded-lg bg-accent-light text-text-light dark:bg-accent-dark dark:text-text-dark ">

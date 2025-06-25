@@ -46,19 +46,8 @@ public class AuthController {
     }
 
 
-    @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@FormParam("username") String username,@FormParam("password") String password){
-        User user  = authService.authenticate(username, password);
-        String token = jwtService.generateToken(user);
-        LoginResponseDto loginResponseDto = LoginResponseDto
-                .builder()
-                .token(token)
-                .expiresIn(System.currentTimeMillis()+jwtService.getExpirationTime())
 
-                .build();
 
-        return ResponseEntity.ok(loginResponseDto);
-    }
 
 
 }

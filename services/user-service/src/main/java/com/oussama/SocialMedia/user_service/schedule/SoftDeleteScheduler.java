@@ -14,11 +14,11 @@ import java.util.List;
 @AllArgsConstructor
 public class SoftDeleteScheduler {
 
-    private final Service userService;
-
-    @Scheduled(cron="0 0 0 30 * ?")
-    public void softDelete() {
-       userService.hardDeleteUsers();
-    }
+//    private final Service userService;
+//
+//    @Scheduled(cron="0 0 0 30 * ?")
+//    public void softDelete() {
+//       userService.hardDeleteUsers();
+//    }
 
 }

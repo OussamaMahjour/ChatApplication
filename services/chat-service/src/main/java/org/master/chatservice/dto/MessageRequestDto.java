@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import org.master.chatservice.entity.MessageType;
 import org.springframework.lang.Nullable;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -13,8 +14,10 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class MessageRequestDto {
+    @Nullable
     String body;
     String owner;
     MessageType type;
-
+    @Nullable
+    MultipartFile file;
 }

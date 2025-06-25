@@ -1,6 +1,7 @@
 package com.oussama.SocialMedia.user_service.controller;
 
 
+import com.oussama.SocialMedia.user_service.dto.FileRequestDto;
 import com.oussama.SocialMedia.user_service.dto.UserRequestDTO;
 import com.oussama.SocialMedia.user_service.dto.UserResponseDTO;
 import com.oussama.SocialMedia.user_service.service.ServiceInterface;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -54,9 +56,14 @@ public class Controller {
                 );
     }
 
+    @PutMapping("/{username}/profile")
+    public ResponseEntity<UserResponseDTO> updateProfile(@PathVariable String username , @ModelAttribute FileRequestDto fileRequestDto){
+        return ResponseEntity.ok(userService.updateProfile(username,fileRequestDto.getMedias()));
+    }
+
     @DeleteMapping
-    public ResponseEntity deleteUser(@RequestBody UserRequestDTO userRequestDTO) {
-        userService.softDeleteUser(userRequestDTO);
+    public ResponseEntity deleteUser(@RequestHeader("username") String username) {
+        userService.softDeleteUser(username);
 
         return ResponseEntity.ok().build();
     }

@@ -1,6 +1,9 @@
 package org.master.chatservice.entity;
 
 public enum MessageType {
-    MEDIA,
-    TEXT
+    AUDIO,
+    VIDEO,
+    IMAGE,
+    TEXT,
+    DOCUMENT
 }

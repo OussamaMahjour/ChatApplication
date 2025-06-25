@@ -6,10 +6,12 @@ import ButtonInverse from "../components/ButtonInverse";
 import ThemeButton from "../components/ThemeButton";
 import { useTheme } from "../provider/ThemeProvider";
 import Input from "../components/Input";
+import { useAuth } from "../provider/AuthProvider";
 
 const Test = ():ReactNode=>{
 
     const {setAlert} = useTheme()
+    const {openSetting} = useAuth()
 
     return <div className="grid grid-flow-row gap-4  grid-cols-4 grid-rows-4  h-screen w-screen p-4 overflow-y-auto relative">
             
@@ -44,6 +46,12 @@ const Test = ():ReactNode=>{
              <Card className="p-2 w-full h-fit">
                <ButtonInverse onClick={()=>setAlert({message:"This is an Alert message",timeout:1000})} className="w-full">
                     Click for alert
+               </ButtonInverse>
+             </Card> 
+
+              <Card className="p-2 w-full h-fit">
+               <ButtonInverse onClick={()=>openSetting()} className="w-full">
+                    OpenSetting
                </ButtonInverse>
              </Card> 
             

@@ -34,7 +34,7 @@ public class User {
     private Long phone;
     @NonNull
     private String email;
-    private URL profilePicture;
+    private String profilePicture;
     @NonNull
     @Enumerated(EnumType.STRING)
     private Gender gender;
@@ -47,7 +47,11 @@ public class User {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @Column(name = "scheduled_to_be_deleted_at")
-    private LocalDateTime scheduledToBeDeletedAt;
+    private boolean deleted = false;
+
+    private LocalDateTime deletedAt;
+
+    @Version
+    private Long version = 0L;
 
 }

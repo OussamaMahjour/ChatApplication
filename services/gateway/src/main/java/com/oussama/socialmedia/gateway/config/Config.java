@@ -35,7 +35,6 @@ public class Config {
                         .uri("lb://auth-service")
                 )
                 .route("media-service",r -> r.path("/api/v1/media/**")
-                        .filters(f->f.filter(filter))
                         .uri("lb://media-service")
                 )
                 .build();

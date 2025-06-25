@@ -28,7 +28,6 @@ public class ChatService {
     private ChatRepository chatRepository;
     private MessageRepository messageRepository;
     private Mapper mapper;
-    private SimpMessagingTemplate messagingTemplate;
 
     public void save(String username, Message message) {
         List<String> participants =new ArrayList<>();
@@ -78,9 +77,6 @@ public class ChatService {
                             .build()));
 
     }
-    @Async
-    public void sendMessage(String destination,Message message){
-        messagingTemplate.convertAndSend("/queue/"+destination+"/chat",message);
 
-    }
+
 }

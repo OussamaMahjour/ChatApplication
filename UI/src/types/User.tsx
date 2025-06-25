@@ -10,7 +10,7 @@ type User={
     birthday?:Date;
     createdAt?:Date;
     updatedAt?:Date;
-    scheduledToBeDeletedAt?:Date;
+    deleted?:boolean;
 }
 
 export enum Gender{
