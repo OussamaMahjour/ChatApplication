@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "buffer": "^6.0.3",
+    "process": "^0.11.10",
+    "simple-peer-light": "^9.10.0"
+  }
+}

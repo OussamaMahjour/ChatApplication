@@ -8,4 +8,13 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  resolve: {
+    alias: {
+      buffer: 'buffer',
+      process: 'process/browser',
+    },
+  },
+  define: {
+    global: 'globalThis', // ✅ Fix for "global is not defined"
+  },
 })
