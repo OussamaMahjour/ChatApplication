@@ -4,13 +4,17 @@ import Conversation from "../../types/Conversation";
 import Contact from "../../types/Contact";
 import Discussion from "./component/Discussion";
 import { Client, IMessage } from "@stomp/stompjs";
-import Message from "../../types/Message";
+import Message, { MessageType } from "../../types/Message";
 import notificationSound from '../../assets/notification.mp3';
 import { useAuth } from "../../provider/AuthProvider";
 import Input from "../../components/Input";
 import ThemeButton from "../../components/ThemeButton";
 import Button from "../../components/Button";
 import ButtonInverse from "../../components/ButtonInverse";
+import Card from "../../components/Card";
+import Attachement, { AttachementType } from "../../types/Attachement";
+import gsap from "gsap";
+import ReactPlayer from "react-player";
 
 
 
@@ -26,8 +30,10 @@ function Chat():ReactElement | null{
     const destinationRef = useRef<HTMLInputElement>(null);
     const [,setUnseenConvo] = useState(0)
     const messageRef = useRef<HTMLInputElement>(null)
-    const {user,token,logout} = useAuth()
-
+    const {user,token,openSetting} = useAuth()
+    const [attachent,setAttachment] = useState<Attachement | null>(null)
+    const filePicker = useRef<any>()
+    const attachementMenu = useRef<HTMLDivElement | null>(null)
     if(!user) return null;
 
     useEffect(()=>{
@@ -159,12 +165,32 @@ function Chat():ReactElement | null{
     };
 
 
-    const sendMessage = (destination:string,message:Message)=>{
+
+    const uploadFile = async (attachent:Attachement)=>{
+        if(!attachent.file)return
+        let formData = new FormData()
+        formData.append("context", "message");
+        formData.append("medias", attachent.file);
+        let response = await fetch("http://localhost:8080/api/v1/media",{
+            method:"POST",
+            body:formData,
+            headers: {
+              Authorization: `Bearer ${token}`,
+          }
+        })
+        let ids = await response.json()
+        return ids[0]
+    }
+    const sendMessage = async (destination:string,message:Message)=>{
         if (connected && stompClientRef.current!=null ) {
-           
+            if(attachent){
+                message.body = await uploadFile(attachent)
+                message.type = attachent.type
+                console.log("sending attachment")
+            }
+            console.log("sending message")
             stompClientRef.current.publish({
             destination: `/app/${destination}/chat`,
-            
             body: JSON.stringify({...message,sentAt: message.sentAt.toISOString()}),
             });
             registerMessage(destination,message)  
@@ -175,43 +201,30 @@ function Chat():ReactElement | null{
     
     }
 
-  
-    
-
-    return <div className="h-full w-full  rounded shadow-md dark:shadow-secondary-dark  dark:border-border-dark  border-border-light flex bg-background-light dark:bg-background-dark ">
+    return <div className="h-full w-full  rounded shadow-md dark:shadow-secondary-dark  dark:border-border-dark  border-border-light flex bg-background-light dark:bg-background-dark relative">
         {
             popup==null?
             <></>:
-            <div className="absolute h-full w-full bg-[#00000033] top-0 left-0 flex justify-center items-center">
+            <div className="absolute top-0 left-0 h-screen w-screen flex justify-center items-center" >
+                <div className="absolute h-full w-full bg-[#00000033] top-0 left-0" onClick={()=>{setPopup(null)}}></div>
                 {popup}
             </div>
             
         }
-        <div className="h-full w-15 border-r dark:border-border-dark border-border-light flex flex-col justify-between items-between">
-           <h1></h1> 
-            <button className="w-full h-20 text-2xl cursor-pointer  " onClick={logout} >
-                <i className="fa-solid bottom-0 fa-right-from-bracket rotate-180 text-text-light dark:text-text-dark"></i>
-            </button>
-        </div>
+        
         {/*contacts list*/}
           
         <div className="h-full max-w-100 w-1/3 border-r dark:border-border-dark border-border-light flex-col flex ">
-            <div className="h-20 border-b   dark:border-border-dark border-border-light  w-full flex px-4 py-3 ">
-                
+            <div className="h-20 border-b   dark:border-border-dark border-border-light  w-full flex px-4 py-3 gap-2 ">
+                <img src={"http://localhost:8080/api/v1/media/"+user.profilePicture} className="h-full aspect-square rounded-full cursor-pointer" onClick={openSetting}/>
                 <h1 className="h-full w-5/7 text-center flex items-center font-bold text-xl dark:text-text-dark text-text-light">
                     Chats
                 </h1>
-                <ThemeButton className="w-1/7 text-xl " />
+                <ThemeButton className="w-3/7 " />
+                
                 <Button className="h-full w-1/7 text-center  text-text-light dark:text-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded hover:dark:bg-accent-dark hover:bg-accent-light" 
                     onClick={()=>setPopup(
-                        <div id="popup" className="min-w-1/4 w-100 rounded  shadow-md dark:shadow-secondary-dark  border  border-accent-light flex bg-background-light dark:bg-background-dark flex-col items-center justify-around gap-4 " > 
-                                
-                            <div className=" w-full flex p-2  justify-end cursor-pointer ">
-                                <Button onClick={()=>setPopup(null)} >
-                                     <i  className="fa-solid fa-xmark "></i>
-                                </Button>
-                               
-                            </div>
+                        <div id="popup" className="z-100 min-w-1/4 w-100 rounded  shadow-md dark:shadow-secondary-dark  border  border-accent-light flex bg-background-light dark:bg-background-dark flex-col items-center justify-around gap-4 " > 
                             <div className="h-20 w-full flex p-3 py-4 gap-1  ">
                                 <Input ref={destinationRef} id="destination" placeholder="Username" />
                             </div>
@@ -231,7 +244,7 @@ function Chat():ReactElement | null{
                                             body: message,
                                             owner:user.username,
                                             seen: false,
-                                            MessageType:"TEXT",
+                                            type:MessageType.TEXT,
                                             sentAt: new Date(),
                                           });
                                         }
@@ -255,7 +268,7 @@ function Chat():ReactElement | null{
 
                             key={index} 
                             contact={e.contact}
-                            lastMessage={e.messages[(e.messages.length>0?e.messages.length-1:0)].body} 
+                            lastMessage={e.messages[(e.messages.length>0?e.messages.length-1:0)]} 
                             lastMessageTime={e.messages[(e.messages.length>0?e.messages.length-1:0)].sentAt} 
                             nbrOfUnSeenMessages={e.messages.filter(e=>!e.seen&&e.owner!=user.username).length}
                             setCurrentContact={setActiveContact}
@@ -288,27 +301,137 @@ function Chat():ReactElement | null{
                     <i className="fa-solid fa-ellipsis-vertical"></i>
                 </button>
             </div>
-            {/* conversation body */}
-            <Discussion user={user}  conversation={
+            
+            {
+                attachent && attachent.file?
+                /* File visualiser */
+                    <div className="flex-1 flex flex-col w-full bg-accent-light dark:bg-accent-dark">
+                        <div className="h-10 w-full  pr-3 flex items-center justify-end">
+                                <i className="fa-solid fa-xmark text-text-light dark:text-text-dark h-fit text-2xl cursor-pointer aspect-square text-center " onClick={()=>{
+                                    setAttachment(null)
+                                }}></i>
+                        </div>
+                        <div className="flex-1 w-full flex justify-center items-center ">
+                            <div>
+                                {
+                                    attachent.type==AttachementType.IMAGE?
+                                    <img  src={URL.createObjectURL(attachent.file)} />
+                                    :attachent.type==AttachementType.VIDEO?
+                                    <ReactPlayer
+                                        style={{height:"100%"}}
+                                        url={URL.createObjectURL(attachent.file)}
+                                        controls
+                                        playing={false}
+                                        />
+                                    :attachent.type==AttachementType.AUDIO?
+                                    <ReactPlayer
+                                        style={{height:"100%"}}
+                                        url={URL.createObjectURL(attachent.file)}
+                                        controls
+                                        playing={false}
+                                        />
+                                    :<div className="flex gap-3 justify-center items-center font-bold text-text-light dark:text-text-dark">
+                                        <i className="fa-solid fa-file text-5xl"></i> 
+                                        <h1 className="text-xl ">{attachent.file.name}</h1>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        
+                    </div>
+                :
+                /* conversation body */
+                <Discussion user={user}  conversation={
                 conversations.filter((e=>e.contact.name==currentContact?.name))[0]
                 }/>
-
+            }
+            
+            
             <div className="h-20 w-full flex p-3 py-4 gap-1 border-t dark:border-border-dark border-border-light ">
-                <Button className="h-full aspect-square   font-bold text-xl ">
-                    <i className="fa-solid fa-paperclip"></i>
-                </Button>
+               
+                <div className="relative w-fit h-fit">
+                    <div id="attachement-menu-container " className="hidden" ref={attachementMenu} >
+                        <div className="w-screen h-screen fixed top-0 left-0  z-10" id="attachement-menu-closer" onClick={(e)=>{
+                                if(!attachementMenu.current)return
+                                attachementMenu.current.classList.add("hidden")
+                                
+                            }}></div>
+                        <div  className="overflow-hidden z-20 absolute flex flex-col w-fit rounded bg-background-light dark:bg-background-dark text-sm left-1/2 top-0 -translate-x-1/2 -translate-y-2/2 border border-border-light dark:border-border-dark p-1">
+                                <Button className="flex justify-start gap-2 font-bold" onClick={()=>{
+                                if(!filePicker.current)return
+                                setAttachment(prev=>{
+                                    filePicker.current.accept="image/*"
+                                    filePicker.current.click()
+                                    return {file:null,type:AttachementType.IMAGE}})
+                                }}>
+                                    <i className="fa-solid fa-image text-xl"></i> 
+                                    <h1>Image</h1></Button>
+                                    
+                                    <Button className="flex justify-start gap-2 font-bold" onClick={()=>{
+                                if(!filePicker.current)return
+                                setAttachment(prev=>{
+                                    filePicker.current.accept="video/*"
+                                    filePicker.current.click()
+                                    return {file:null,type:AttachementType.VIDEO}})
+                                }}>
+                                
+                                    <i className="fa-solid fa-film text-xl"></i> 
+                                    <h1>Video</h1></Button>
+                                    
+                                    <Button className="flex justify-start gap-2 font-bold" onClick={()=>{
+                                if(!filePicker.current)return
+                                
+                                setAttachment(prev=>{
+                                    filePicker.current.accept="audio/*"
+                                    filePicker.current.click()
+                                    return {file:null,type:AttachementType.AUDIO}})
+                                }}>
+                                    <i className="fa-solid fa-headphones text-xl"></i> 
+                                    <h1>Audio</h1></Button>
+                                    
+                                    <Button className="flex justify-start gap-2 font-bold" onClick={()=>{
+                                if(!filePicker.current)return
+                                setAttachment(prev=>{
+                                    filePicker.current.accept=".*"
+                                    filePicker.current.click()
+                                    return {file:null,type:AttachementType.DOCUMENT}})
+                                }}>
+                                    <i className="fa-solid fa-file text-xl"></i> 
+                                    <h1>Document</h1></Button>
+
+                        </div>
+                    </div>
+                    <input onChange={(e)=>{
+                                    setAttachment(prev=>{
+                                        if(!prev || !e.target.files)return null
+                                        return {file:e.target.files[0],type:prev.type}
+                                    })
+                                     if(!attachementMenu.current)return
+                                     attachementMenu.current.classList.add("hidden")
+
+                                }}  type='file' id='file' ref={filePicker} style={{display: 'none'}}/>
+                    <Button className="h-full aspect-square relative  font-bold text-xl " onClick={()=>{
+                        if(!attachementMenu.current)return
+                            attachementMenu.current.classList.remove("hidden")
+                    }}>
+                        
+                        
+                        <i className="fa-solid fa-paperclip"></i>
+                    </Button>
+                </div>
                 <Input id="message" ref={messageRef} placeholder="Write something..." className="p-3 focus:outline-hidden dark:border-border-dark dark:focus:border-border-light focus:border-border-dark flex-1 h-full border border-border-light rounded  text-text-light dark:text-text-dark"/>
                 <ButtonInverse className="h-full aspect-square  text-xl  " 
                     onClick={()=>{
                             const message = messageRef.current?.value || "";
-                            if (currentContact.name.length !== 0 && message.length !== 0) {
+                            if (currentContact.name.length !== 0 && (message.length !== 0 || (attachent!=null && attachent.file!=null))) {
                                 sendMessage(currentContact.name,{
                                     body: message,
                                     owner: user.username,
                                     seen: false,
-                                    MessageType:"TEXT",
+                                    type:MessageType.TEXT,
                                     sentAt: new Date(),
                                 });
+                                setAttachment(null)
                             }
                            
                         }}

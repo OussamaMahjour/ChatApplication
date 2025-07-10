@@ -1,10 +1,11 @@
 import { ReactElement } from "react";
 import Contact from "../../../types/Contact";
+import Message, { MessageType } from "../../../types/Message";
 
 type Props =  {
     isActive?:boolean; 
     contact:Contact
-    lastMessage:string;
+    lastMessage:Message;
     lastMessageTime:Date;
     nbrOfUnSeenMessages:number;
     setCurrentContact:CallableFunction;
@@ -27,7 +28,20 @@ function Account({isActive,contact,lastMessage,lastMessageTime,nbrOfUnSeenMessag
                         hour12: true,
                         })}</h1>
                 </div>
-                <p className="text-sm text-secondary-light  max-h-1/2 line-clamp-1">{lastMessage}</p>
+                <p className="text-sm text-secondary-light  max-h-1/2 line-clamp-1">
+                {lastMessage.type==MessageType.TEXT?
+                lastMessage.body
+                :lastMessage.type==MessageType.AUDIO?
+                <div className="flex gap-2 items-center"><i className="fa-solid fa-headphones"></i><h1>audio</h1></div>
+                :lastMessage.type==MessageType.VIDEO?
+                <div className="flex gap-2 items-center"><i className="fa-solid fa-film"></i><h1>video</h1></div>
+                :lastMessage.type==MessageType.IMAGE?
+                <div className="flex gap-2 items-center"><i className="fa-solid fa-image"></i><h1>image</h1></div>
+                :lastMessage.type==MessageType.DOCUMENT?
+                <div className="flex gap-2 items-center"><i className="fa-solid fa-file"></i><h1>document</h1></div>:
+                <></>
+                }
+                </p>
         </div>
         {
             nbrOfUnSeenMessages!=0?

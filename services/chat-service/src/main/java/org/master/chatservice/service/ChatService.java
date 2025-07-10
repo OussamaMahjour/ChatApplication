@@ -12,6 +12,8 @@ import org.master.chatservice.entity.ChatType;
 import org.master.chatservice.entity.Message;
 import org.master.chatservice.repository.ChatRepository;
 import org.master.chatservice.repository.MessageRepository;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -75,4 +77,6 @@ public class ChatService {
                             .build()));
 
     }
+
+
 }

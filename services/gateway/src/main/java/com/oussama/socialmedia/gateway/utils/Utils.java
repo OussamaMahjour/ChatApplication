@@ -32,11 +32,11 @@ public class Utils {
                 .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token);
-        }catch(
-    SignatureException e){
-        return false;
-    }
-        return !isTokenExpired(token);
+        }catch(Exception e){
+                e.printStackTrace();
+                return false;
+            }
+                return !isTokenExpired(token);
     }
 
     public Key getSigningKey() {

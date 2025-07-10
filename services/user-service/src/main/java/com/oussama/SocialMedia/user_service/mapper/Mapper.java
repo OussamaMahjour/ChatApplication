@@ -40,6 +40,7 @@ public class Mapper implements MapperInterface{
                     .birthday(user.getBirthday())
                     .phone(user.getPhone())
                     .profilePicture(user.getProfilePicture())
+                    .deleted(user.isDeleted())
                     .build();
 
 

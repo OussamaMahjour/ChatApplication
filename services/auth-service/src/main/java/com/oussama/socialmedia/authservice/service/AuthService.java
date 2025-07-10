@@ -39,6 +39,7 @@ public class AuthService {
         return userRepository.save(user);
     }
 
+    @Transactional
     public void deleteUser(String username) {
         userRepository.deleteUserByUsername(username);
     }
