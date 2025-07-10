@@ -15,6 +15,7 @@ import Card from "../../components/Card";
 import Attachement, { AttachementType } from "../../types/Attachement";
 import gsap from "gsap";
 import ReactPlayer from "react-player";
+import VideoCall from "./component/VideoCall";
 
 
 
@@ -294,7 +295,11 @@ function Chat():ReactElement | null{
                 <button className="h-full aspect-square text-center  text-text-light dark:text-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded hover:dark:bg-accent-dark hover:bg-accent-light">
                     <i className="fa-solid fa-phone"></i>
                 </button>
-                <button className="h-full aspect-square  text-center  text-text-light dark:text-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded hover:dark:bg-accent-dark hover:bg-accent-light" >
+                <button className="h-full aspect-square  text-center  text-text-light dark:text-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded hover:dark:bg-accent-dark hover:bg-accent-light" onClick={()=>{
+                    setPopup(
+                        <VideoCall target={currentContact.name}/>
+                    )
+                }}>
                     <i className="fa-solid fa-video"></i>
                 </button>
                 <button className="h-full aspect-square  text-center  text-text-light dark:text-text-dark flex justify-center items-center font-bold text-xl cursor-pointer rounded hover:dark:bg-accent-dark hover:bg-accent-light" >
