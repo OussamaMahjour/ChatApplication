@@ -76,6 +76,7 @@ chatApplication/
     ├── gateway
     ├── discovery
     ├── auth-service
+    ├── media-service
     ├── user-service
     ├── chat-service 
 ├── UI/     (user interface)          
